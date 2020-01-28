@@ -70,12 +70,23 @@ function authentication_complete() {
   }
 
   if (lightdm.is_authenticated) {
-    if (key === "") {
-      lightdm.login(lightdm.authentication_user, lightdm.default_session);
-    } else {
-      lightdm.login(lightdm.authentication_user, key);
-    }
+    // document.body.style.opacity = '0';
+    $('body').fadeOut(1000, () => {
+        if (key === "") {
+            lightdm.login(lightdm.authentication_user, lightdm.default_session);
+        } else {
+            lightdm.login(lightdm.authentication_user, key);
+        }
+    });
+    // setTimeout(() => {
+    //     if (key === "") {
+    //         lightdm.login(lightdm.authentication_user, lightdm.default_session);
+    //     } else {
+    //         lightdm.login(lightdm.authentication_user, key);
+    //     }
+    // }, 1000);
   } else {
+    animateCircle(STATE_RESET);
     show_error("Authentication Failed");
     start_authentication(selected_user);
   }
@@ -205,27 +216,137 @@ function update_time() {
 // Initialization
 //////////////////////////////////
 
+function onBodyKeyUp(e) {
+    if (e.key === ' ') {
+        let password_container = document.querySelector("#password_container");
+        if (!isVisible(password_container)) {
+            const users = lightdm.users;
+            if (users.length === 1) {
+                start_authentication(users[0].name);
+            }
+        }
+        return;
+    }
+}
+
+let circle;
+let spinner;
+let circleTO;
+let password_entry;
+
+const STATE_INPUT = 0;
+const STATE_SUBMIT = 1;
+const STATE_RESET = 2;
+const STATE_DELETE = 3;
+function animateCircle(state) {
+    if (!circle) return;
+
+    let timeout = 2000;
+    const i = parseInt(Math.random() * 360, 10);
+
+    const resetState = () => {
+        spinner.classList.remove('active--input');
+        spinner.classList.remove('active--submit');
+        spinner.classList.remove('active--reset');
+        spinner.classList.remove('active--delete');
+    };
+
+    circle.style.transform = 'rotate(' + i + 'deg)';
+    spinner.classList.add('active');
+    resetState();
+    switch (state) {
+        case STATE_INPUT:
+            spinner.classList.add('active--input');
+            break;
+    
+        case STATE_SUBMIT:
+            spinner.classList.add('active--submit');
+            timeout = false;
+            break;
+    
+        case STATE_RESET:
+            spinner.classList.add('active--reset');
+            break;
+    
+        case STATE_DELETE:
+            spinner.classList.add('active--delete');
+            break;
+    
+        default:
+            break;
+    }
+    
+    clearTimeout(circleTO);
+    if (timeout) {
+        circleTO = setTimeout(() => {
+            spinner.classList.remove('active');
+            resetState();
+            circle.style.transform = '';
+        }, timeout);
+    }
+}
+
+
+function onPassKeyUp(e) {
+    switch (e.keyCode) {
+        case 27:
+            selected_user = null;
+            lightdm.cancel_authentication();
+            show_users();
+            animateCircle(STATE_RESET);
+            break;
+        case 8:
+            animateCircle(STATE_DELETE);
+            break;
+        case 13:
+            animateCircle(STATE_SUBMIT);
+            break;
+        default:
+            animateCircle(STATE_INPUT);
+            break;
+    }
+}
+
+function initialize_elements() {
+  circle = document.querySelector('.login_spinner .circle-progress');
+  spinner = document.querySelector('.login_spinner');
+  password_entry = document.querySelector("#password_entry");
+}
+
+function initialize_events() {
+  document.body.addEventListener('keyup', onBodyKeyUp);
+  password_entry.addEventListener('keyup', onPassKeyUp);
+}
+
 function initialize() {
   show_message("");
   initialize_users();
   initialize_timer();
   initialize_sessions();
-	/*
-	let bg_image_dir = config.get_str("background_images");
-	console.log("image_dir", bg_image_dir);
-	if(bg_image_dir) {
-		let backgrounds = greeter_util.dirlist(bg_image_dir);
-		console.log("bg list", backgrounds);
-		if(backgrounds.length) {
-			let chosen = backgrounds[Math.floor(Math.random()*backgrounds.length)];
-			document.querySelectorAll("body")[0].style.backgroundImage = chosen;
-		}
-	}
-	*/
+  initialize_elements();
+  initialize_events();
+//   if ('undefined' === typeof greeter_config) {
+//     window.greeter_config = { branding: {}, greeter: {} };
+//   }
+//   alert(JSON.stringify(greeter_config.branding));
+//   alert(bg_image);
+//   alert(user_image);
+//   document.querySelector('body').style.backgroundImage = bg_image;
+//   document.querySelector('.user_image').src = user_image;
+	// let bg_image_dir = config.get_str("background_images");
+	// console.log("image_dir", bg_image_dir);
+	// if(bg_image_dir) {
+	// 	let backgrounds = greeter_util.dirlist(bg_image_dir);
+	// 	console.log("bg list", backgrounds);
+	// 	if(backgrounds.length) {
+	// 		let chosen = backgrounds[Math.floor(Math.random()*backgrounds.length)];
+	// 		document.querySelectorAll("body")[0].style.backgroundImage = chosen;
+	// 	}
+	// }
 }
 
 function on_image_error(e) {
-  e.currentTarget.src = "img/avatar.svg";
+  e.currentTarget.src = "user.png";
 }
 
 function initialize_users() {
@@ -245,7 +366,7 @@ function initialize_users() {
       image.src = user.image;
       image.onerror = on_image_error;
     } else {
-      image.src = "img/avatar.svg";
+      image.src = "user.png";
     }
 
     userNode.id = user.name;

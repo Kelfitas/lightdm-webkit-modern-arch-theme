@@ -1,11 +1,12 @@
 
 body {
-font-family: sans-serif;
+  font-family: 'Hack', sans-serif;
   font-size: 25px;
 }
 
 body {
-  background: url('main-bg.png') no-repeat;
+  background: url('background.png') no-repeat;
+  background-position: center center;
   background-size: cover;
   display: table;
   height: 100%;
@@ -15,6 +16,9 @@ body {
 
   font-size: 10pt;
   text-shadow: 1px 1px 3px black;
+  opacity: 1;
+  transition: opacity 1s ease-out;
+  will-change: opacity;
 }
 
 body, span, div, img {
@@ -140,11 +144,62 @@ footer, .header {
   margin-top: 5px;
 }
 
+.login_spinner {
+    position: absolute;
+    width: 110%;
+    height: 110%;
+    margin: -5%;
+}
+
+.login_spinner circle {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1;
+    transform: rotate(0deg);
+    transform-origin: center;
+    transition: all .3s ease-out;
+}
+
+.login_spinner.active circle {
+    stroke-width: 3;
+}
+
+.login_spinner.active circle:nth-child(1) {
+    stroke-opacity: 0.3;
+}
+
+.login_spinner.active circle:nth-child(2) {
+    stroke-dasharray: 300%;
+    stroke-dashoffset: 100;
+}
+
+.login_spinner.active.active--input circle {
+    stroke: #00FCA3;
+}
+
+.login_spinner.active.active--submit circle {
+    stroke: #1155ff;
+    stroke-dasharray: initial;
+    stroke-dashoffset: initial;
+}
+
+.login_spinner.active.active--reset circle {
+    stroke: #fff;
+    stroke-dasharray: initial;
+    stroke-dashoffset: initial;
+    stroke-width: 1;
+}
+
+.login_spinner.active.active--delete circle {
+    stroke: red;
+}
+
 .login_content {
   display: table-row;
 }
 
 .login_container {
+  position: relative;
   display: table-cell;
   vertical-align: middle;
 }
@@ -182,12 +237,14 @@ footer, .header {
 }
 
 .user_image_wrapper {
+  position: relative;
   width: 120px;
   height: 120px;
 
   border-radius: 120px;
-  border: 1px solid #e1e1e1;
+  /* border: 1px solid #e1e1e1; */
   -webkit-transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 10px 6px rgba(0, 0, 0, 0.3);
 
   margin-left: auto;
   margin-right: auto;
